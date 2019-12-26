@@ -8,11 +8,11 @@ Param(
     [Parameter(Mandatory=$True, Position=3)]
     [string]$permission,
 	
-    [Parameter(Mandatory=$True, Position=4)]
-    [string]$townership,
+	[Parameter(Mandatory=$True, Position=4)]
+	[string]$townership,
 	
-    [Parameter(Mandatory=$True, Position=5)]
-    [string]$reportfolder	
+	[Parameter(Mandatory=$True, Position=5)]
+	[string]$reportfolder	
     )
 
 # To Be able to catch exceptions
@@ -62,43 +62,51 @@ LogMsg "Permission:   ""$permission"""
 LogMsg "NewOwner:     ""$townership"""
 LogMsg "ReportFolder: ""$reportfolder"""
 LogMsg "---------------------------------------------"
-get-childitem $path -recurse | foreach-object {
-    $filesystem_item = $_
 
-	$fi_path = $filesystem_item.fullname
-	$fi_name = $filesystem_item.name
-    $fi_acl = Get-Acl $fi_path
-	$fi_owner = $fi_acl.Owner
+$fi_path=""
 
-    $apply_rule = $true
-    foreach ($rule in $fi_acl.Access) {
-        if ( $rule.IdentityReference -eq $principal ) {
-            $rights = $rule.FileSystemRights.ToString()
-            if ( $rights.Contains($permission) ) {
-                $apply_rule = $false
-            }
-        }
-    }
+try {
+	get-childitem $path -recurse | foreach-object {
+		$filesystem_item = $_
 
-    if ($apply_rule) {
-			try {
-				Set-AclRule $fi_path $principal $permission "Allow"
-			}
-			Catch [System.InvalidOperationException], [Microsoft.PowerShell.Commands.SetAclCommand] {
-				LogMsg "SA Failed: $fi_path"
-				if ( $fi_owner.StartsWith("O:S-1-5-21-")) {
-					Set-OwnerRule $fi_path $townership
-					Set-AclRule $fi_path $principal $permission "Allow"
+		$fi_path = $filesystem_item.fullname
+		$fi_name = $filesystem_item.name
+		$fi_acl = Get-Acl $fi_path
+		$fi_owner = $fi_acl.Owner
+
+		$apply_rule = $true
+		foreach ($rule in $fi_acl.Access) {
+			if ( $rule.IdentityReference -eq $principal ) {
+				$rights = $rule.FileSystemRights.ToString()
+				if ( $rights.Contains($permission) ) {
+					$apply_rule = $false
 				}
 			}
-			finally {
+		}
+
+		if ($apply_rule) {
+				try {
+					Set-AclRule $fi_path $principal $permission "Allow"
+				}
+				Catch [System.InvalidOperationException], [Microsoft.PowerShell.Commands.SetAclCommand] {
+					LogMsg "SA Failed: $fi_path"
+					if ( $fi_owner.StartsWith("O:S-1-5-21-")) {
+						Set-OwnerRule $fi_path $townership
+						Set-AclRule $fi_path $principal $permission "Allow"
+					}
+				}
+				finally {
+				}
+			} else {
+				# LogMsg "Skip apply - owned by "$fi_acl.Owner"- "$fi_path 
 			}
-        } else {
-            # LogMsg "Skip apply - owned by "$fi_acl.Owner"- "$fi_path 
-        }
 
+	}
 }
-
+catch {
+	LogMsg "FSIteration failoed: $_.Exception.Message"
+	LogMsg "Previous object seems to be: $fi_path"
+}
 $FinalTimeStamp = Get-Date
 $FinalTimeStamp_txt = Get-Date $FinalTimeStamp -Format "yyyy-MM-dd HH:mm K"
 $interval = $FinalTimeStamp - $InitialTimeStamp 
