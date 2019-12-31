@@ -19,25 +19,24 @@ Param(
 $ErrorActionPreference = "Stop"
 
 function Set-AclRule {
-	Param ($fpath, $principal, $permission, $action)
-	$facl = Get-Acl $fpath
-	$arule = New-Object  system.security.accesscontrol.filesystemaccessrule($principal, $permission, $action)
-	$facl.SetAccessRule($arule)
-	Set-Acl -Path $fpath -AclObject $facl
-	$msg = "SA: $fpath, $principal, $permission, $action" 
+	Param ($fpath, $user_or_group, $permission, $action)
+	$msg = "SA: $fpath, $user_or_group, $permission, $action" 
 	LogMsg $msg
-	Write-Host $msg
+	$facl = (Get-Item $fpath).GetAccessControl('Access')
+	$principal = New-Object System.Security.Principal.NTAccount($user_or_group)
+	$arule = New-Object System.Security.AccessControl.FileSystemAccessRule($principal, $permission, $action)
+	$facl.AddAccessRule($arule)
+	Set-Acl -Path $fpath $facl
 }
 
 function Set-OwnerRule {
 	Param ($fpath, $new_owner)
-	$GroupOwnerShip = New-Object System.Security.Principal.NTAccount($new_owner)
-	$facl = Get-Acl $fpath
-	$facl.SetOwner($GroupOwnerShip)
-	Set-Acl -Path $fpath -AclObject $facl
 	$msg = "SO: $fpath, $new_owner"
 	LogMsg  $msg
-	Write-Host $msg
+	$GroupOwnerShip = New-Object System.Security.Principal.NTAccount($new_owner)
+	$facl = (Get-Item $fpath).GetAccessControl('Access')
+	$facl.SetOwner($GroupOwnerShip)
+	Set-Acl -Path $fpath -AclObject $facl
 }
 
 $file_time_tag=Get-Date -Format "yyyyMMdd_HHmmss"
@@ -56,55 +55,61 @@ $InitialTimeStamp_txt = Get-Date $InitialTimeStamp -Format "yyyy-MM-dd HH:mm K"
 
 LogMsg $InitialTimeStamp_txt
 LogMsg "---------------------------------------------"
-LogMsg "Path:         ""$path"""
-LogMsg "Principal:    ""$principal"""
-LogMsg "Permission:   ""$permission"""
-LogMsg "NewOwner:     ""$townership"""
-LogMsg "ReportFolder: ""$reportfolder"""
+LogMsg "Path:       ""$path"""
+LogMsg "Principal:  ""$principal"""
+LogMsg "Permission: ""$permission"""
+LogMsg "NewOwner:   ""$townership"""
+LogMsg "ReportFile: ""$report_file_path"""
 LogMsg "---------------------------------------------"
 
 $fi_path=""
 
 try {
-	get-childitem $path -recurse | foreach-object {
-		$filesystem_item = $_
+	get-childitem -LiteralPath $path -recurse | foreach-object {
+		try {
+			$filesystem_item = $_
 
-		$fi_path = $filesystem_item.fullname
-		$fi_name = $filesystem_item.name
-		$fi_acl = Get-Acl $fi_path
-		$fi_owner = $fi_acl.Owner
+			$fi_path = $filesystem_item.fullname
+			$fi_name = $filesystem_item.name
+			$fi_acl = Get-Acl $fi_path
+			$fi_owner = $fi_acl.Owner
 
-		$apply_rule = $true
-		foreach ($rule in $fi_acl.Access) {
-			if ( $rule.IdentityReference -eq $principal ) {
-				$rights = $rule.FileSystemRights.ToString()
-				if ( $rights.Contains($permission) ) {
-					$apply_rule = $false
-				}
-			}
-		}
-
-		if ($apply_rule) {
-				try {
-					Set-AclRule $fi_path $principal $permission "Allow"
-				}
-				Catch [System.InvalidOperationException], [Microsoft.PowerShell.Commands.SetAclCommand] {
-					LogMsg "SA Failed: $fi_path"
-					if ( $fi_owner.StartsWith("O:S-1-5-21-")) {
-						Set-OwnerRule $fi_path $townership
-						Set-AclRule $fi_path $principal $permission "Allow"
+			$apply_rule = $true
+			foreach ($rule in $fi_acl.Access) {
+				if ( $rule.IdentityReference -eq $principal ) {
+					$rights = $rule.FileSystemRights.ToString()
+					if ( $rights.Contains($permission) ) {
+						$apply_rule = $false
 					}
 				}
-				finally {
-				}
-			} else {
-				# LogMsg "Skip apply - owned by "$fi_acl.Owner"- "$fi_path 
 			}
 
+			if ($apply_rule) {
+					try {
+						Set-AclRule $fi_path $principal $permission "Allow"
+					}
+					Catch [System.InvalidOperationException], [Microsoft.PowerShell.Commands.SetAclCommand] {
+						LogMsg "SA Failed: $fi_path ($principal::$permission)($_.Exception)"
+						if ( $fi_owner.StartsWith("O:S-1-5-21-")) {
+							Set-OwnerRule $fi_path $townership
+							Set-AclRule $fi_path $principal $permission "Allow"
+						}
+					}
+					finally {
+					}
+				} else {
+					# LogMsg "Skip apply - owned by "$fi_acl.Owner"- "$fi_path 
+				}
+			}
+			catch {
+				LogMsg "Error during or after item: $fi_path"
+				LogMsg $_.Exception|format-list -force
+			}
 	}
 }
 catch {
-	LogMsg "FSIteration failoed: $_.Exception.Message"
+	LogMsg $_.Exception|format-list -force
+	LogMsg $_
 	LogMsg "Previous object seems to be: $fi_path"
 }
 $FinalTimeStamp = Get-Date
