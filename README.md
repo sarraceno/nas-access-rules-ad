@@ -8,18 +8,18 @@ Resolution was to come getting some crawler to check every file, every folder.
 Then other erros arised.
 
 As a result I landed on:
-* Using PowerShell 5.1 minimum
-      ** for script crawler (Get-ChildItem)
-* icacls applying permissions
-      ** Proved to be complete against Set-Acl command from PowerShell 
-         *** Set-Acl presented issues regarding unicode
-         *** set-Acl presented issue related to ownership  that I did not fully got the answer
+	Using PowerShell 5.1 minimum
+		for script crawler (Get-ChildItem)
+	icacls applying permissions
+		Proved to be complete against Set-Acl command from PowerShell 
+			Set-Acl presented issues regarding unicode
+			set-Acl presented issue related to ownership  that I did not fully got the answer
 
 Scripts produced are
-  * PermissionSetTOnwerShip_icacls.ps1
-    ** icacls version and more complete
-  *  	PermissionSetTOnwerShip.ps1
-    ** PowerShell only solution
+	PermissionSetTOnwerShip_icacls.ps1
+		icacls version and more complete
+	PermissionSetTOnwerShip.ps1
+    		PowerShell only solution
     
 Functionality for both scripts:
 
