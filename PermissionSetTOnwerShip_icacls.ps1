@@ -29,17 +29,16 @@ References:
    http://vcloud-lab.com/entries/windows-2016-server-r2/find-next-available-free-drive-letter-using-powershell-
   Long paths:
    https://stackoverflow.com/questions/46308030/handling-path-too-long-exception-with-new-psdrive/46309524
-   There is a local policy that is now available since Windows anniversary update.
 
-Requirements are :
-   Windows Management Framework 5.1
-   .Net Framework 4.6.2 or more recent
-   Windows 10 / Windows server 2016 (Build 1607 or newer)
+	Requirements are :
+   		Windows Management Framework 5.1
+   		.Net Framework 4.6.2 or more recent
+   		Windows 10 / Windows server 2016 (Build 1607 or newer)
 
-This policy can be enabled using the following snippet.
+	This policy can be enabled using the following snippet.
 
-#GPEdit location:  Configuration>Administrative Templates>System>FileSystem 
-Set-ItemProperty 'HKLM:\System\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -value 1
+	#GPEdit location:  Configuration>Administrative Templates>System>FileSystem 
+	Set-ItemProperty 'HKLM:\System\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -value 1
  
 #>
 
