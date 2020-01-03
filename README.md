@@ -35,10 +35,10 @@ Arguments:
 ### Paths specified as UNCs
 
 Drive/local long path:
-- '\\\?\C:\Very long path'
+- '\\\\\?\C:\Very long path'
 
 Network long path:
-- '\\\?\UNC\127.0.0.1\c$\Very long path\'
+- '\\\\\?\UNC\127.0.0.1\c$\Very long path\'
 
     
 That's all, have a nice NAS Sysadmin day.
