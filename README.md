@@ -1,7 +1,7 @@
 # nas-access-rules-ad
 During my role of Storage Administrator for NAS appliances (DELL EMC / NetApp) got a request to apply read permissions for all files on NAS CIFS resources, those resources contains data with are more than 15 years old.
 
-Applying such permissions using windows file explorer imidiatly proved to be unsuportable regarding several errors, but the most relevant were borken inheritances over file system tree.
+Applying such permissions using windows file explorer imidiatly proved to be unsuportable regarding several errors, but the most relevant were broken inheritances over file system tree.
 
 Resolution was to come getting some crawler to check every file, every folder.
 
