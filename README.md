@@ -24,11 +24,15 @@ Scripts produced are
     
 Functionality for both scripts:
 
-  Invoking any of the scripts with argumenyts:
-	-path: Path to inspect
-	-principal: for permissions, can be group or user from Ad or local
-	-permission: permission to apply, which vary from icacls version for Set-Acl version
-	-townership: principal to apply as onwership for those cases where SID is not well translated
-	-reportfolder: Folder to where simple log files are stored
+  Invoking any of the scripts with arguments:
+	
+
+    -path:         Path to inspect
+    -principal:    Principal for permissions, can be group or user from Ad or local
+    -permission:   Permission to grant/allow, which vary from icacls version for Set-Acl version
+    -townership:   principal to apply as onwership for those cases where SID is not well translated
+    -reportfolder: Folder to where simple log files are stored
+
     
 That's all, have a nice NAS Sysadmin day.
+
