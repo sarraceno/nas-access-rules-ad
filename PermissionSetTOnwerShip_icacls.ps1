@@ -14,9 +14,41 @@ Param(
 	[Parameter(Mandatory=$True, Position=5)]
 	[string]$reportfolder	
     )
+<#
+	Drive/local long path:
+		'\\?\C:\Very long path'
+	Network long path:
+		'\\?\UNC\127.0.0.1\c$\Very long path\'
+#>
 
-# To Be able to catch exceptions
+<#
+References:
+   https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/new-psdrive?view=powershell-5.1
+   https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/remove-psdrive?view=powershell-5.1
+   http://vcloud-lab.com/entries/windows-2016-server-r2/find-next-available-free-drive-letter-using-powershell-
+  Long paths
+   https://stackoverflow.com/questions/46308030/handling-path-too-long-exception-with-new-psdrive/46309524
+   There is a local policy that is now available since Windows anniversary update.
+
+Requirements are :
+   Windows Management Framework 5.1
+   .Net Framework 4.6.2 or more recent
+   Windows 10 / Windows server 2016 (Build 1607 or newer)
+
+This policy can be enabled using the following snippet.
+
+#GPEdit location:  Configuration>Administrative Templates>System>FileSystem 
+Set-ItemProperty 'HKLM:\System\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -value 1
+ 
+#>
+
+<# To Be able to catch exceptions #>
 $ErrorActionPreference = "Stop"
+
+function Get-AvailableDriveLetter {
+	$dletter = (68..90 | %{$L=[char]$_; if ((gdr).Name -notContains $L) {$L}})[0]
+	return $dletter
+}
 
 function Set-AclRule {
 	Param ($fpath, $user_or_group, $permission, [ValidateSet("grant")]$action)
@@ -51,18 +83,19 @@ function LogMsg {
 $InitialTimeStamp = Get-Date
 $InitialTimeStamp_txt = Get-Date $InitialTimeStamp -Format "yyyy-MM-dd HH:mm K"
 
-LogMsg $InitialTimeStamp_txt
-LogMsg "---------------------------------------------"
-LogMsg "Path:       ""$path"""
-LogMsg "Principal:  ""$principal"""
-LogMsg "Permission: ""$permission"""
-LogMsg "NewOwner:   ""$townership"""
-LogMsg "ReportFile: ""$report_file_path"""
-LogMsg "---------------------------------------------"
 
 $fi_path=""
 
+$dletter = Get-AvailableDriveLetter
 try {
+	LogMsg $InitialTimeStamp_txt
+	LogMsg "---------------------------------------------"
+	LogMsg "Path:       ""$path"""
+	LogMsg "Principal:  ""$principal"""
+	LogMsg "Permission: ""$permission"""
+	LogMsg "NewOwner:   ""$townership"""
+	LogMsg "ReportFile: ""$report_file_path"""
+	LogMsg "---------------------------------------------"
 	get-childitem -LiteralPath $path -recurse | foreach-object {
 		try {
 			$filesystem_item = $_
@@ -110,10 +143,11 @@ catch {
 	LogMsg $_
 	LogMsg "Previous object seems to be: $fi_path"
 }
+finally {
+	# Remove-PSDrive -name $dletter
+}
 $FinalTimeStamp = Get-Date
 $FinalTimeStamp_txt = Get-Date $FinalTimeStamp -Format "yyyy-MM-dd HH:mm K"
 $interval = $FinalTimeStamp - $InitialTimeStamp 
 LogMsg "$FinalTimeStamp_txt ---> $interval"
 $outf.close()
-
-
