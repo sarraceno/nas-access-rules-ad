@@ -40,6 +40,30 @@ Drive/local long path:
 Network long path:
 - '\\\\\?\UNC\127.0.0.1\c$\Very long path\'
 
+### References
+#### Usefull
+
+https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/new-psdrive?view=powershell-5.1
+
+https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/remove-psdrive?view=powershell-5.1
+
+http://vcloud-lab.com/entries/windows-2016-server-r2/find-next-available-free-drive-letter-using-powershell-
+
+#### Relevant
+##### Long paths
+
+https://stackoverflow.com/questions/46308030/handling-path-too-long-exception-with-new-psdrive/46309524
+
+    Requirements are :    
+	    Windows Management Framework 5.1
+    	    .Net Framework 4.6.2 or more recent
+    	    Windows 10 / Windows server 2016 (Build 1607 or newer)
+    
+    Policy for long paths can be enabled using the following snippet.
+  	    #GPEdit location: Configuration>Administrative Templates>System>FileSystem
+	    Set-ItemProperty 'HKLM:\System\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -value 1
+
     
 That's all, have a nice NAS Sysadmin day.
+
 
