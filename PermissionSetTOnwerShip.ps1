@@ -8,11 +8,11 @@ Param(
     [Parameter(Mandatory=$True, Position=3)]
     [string]$permission,
 	
-	[Parameter(Mandatory=$True, Position=4)]
-	[string]$townership,
-	
-	[Parameter(Mandatory=$True, Position=5)]
-	[string]$reportfolder	
+    [Parameter(Mandatory=$True, Position=4)]
+    [string]$townership,
+
+    [Parameter(Mandatory=$True, Position=5)]
+    [string]$reportfolder	
     )
 
 # To Be able to catch exceptions
@@ -117,5 +117,3 @@ $FinalTimeStamp_txt = Get-Date $FinalTimeStamp -Format "yyyy-MM-dd HH:mm K"
 $interval = $FinalTimeStamp - $InitialTimeStamp 
 LogMsg "$FinalTimeStamp_txt ---> $interval"
 $outf.close()
-
-
