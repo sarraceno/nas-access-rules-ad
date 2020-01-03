@@ -8,11 +8,11 @@ Param(
     [Parameter(Mandatory=$True, Position=3)]
     [ValidateSet("F","M","RX","R","W")]$permission,
 	
-	[Parameter(Mandatory=$True, Position=4)]
-	[string]$townership,
-	
-	[Parameter(Mandatory=$True, Position=5)]
-	[string]$reportfolder	
+    [Parameter(Mandatory=$True, Position=4)]
+    [string]$townership,
+
+    [Parameter(Mandatory=$True, Position=5)]
+    [string]$reportfolder	
     )
 <#
 	Drive/local long path:
@@ -23,10 +23,11 @@ Param(
 
 <#
 References:
+  Usefull:
    https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/new-psdrive?view=powershell-5.1
    https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/remove-psdrive?view=powershell-5.1
    http://vcloud-lab.com/entries/windows-2016-server-r2/find-next-available-free-drive-letter-using-powershell-
-  Long paths
+  Long paths:
    https://stackoverflow.com/questions/46308030/handling-path-too-long-exception-with-new-psdrive/46309524
    There is a local policy that is now available since Windows anniversary update.
 
@@ -142,9 +143,6 @@ catch {
 	LogMsg $_.Exception|format-list -force
 	LogMsg $_
 	LogMsg "Previous object seems to be: $fi_path"
-}
-finally {
-	# Remove-PSDrive -name $dletter
 }
 $FinalTimeStamp = Get-Date
 $FinalTimeStamp_txt = Get-Date $FinalTimeStamp -Format "yyyy-MM-dd HH:mm K"
