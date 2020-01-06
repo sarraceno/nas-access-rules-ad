@@ -7,7 +7,7 @@ Param(
 
     [Parameter(Mandatory=$True, Position=3)]
     [ValidateSet("F","M","RX","R","W")]$permission,
-	
+
     [Parameter(Mandatory=$True, Position=4)]
     [string]$townership,
 
@@ -80,13 +80,50 @@ function LogMsg {
 	Write-Host $msg
 }
 
+function apply_permissions {
+	Param($filesystem_item)
+	try {
+		$fi_path = $filesystem_item.fullname
+		$fi_name = $filesystem_item.name
+		$fi_acl = Get-Acl $fi_path
+		$fi_owner = $fi_acl.Owner
+
+		$apply_rule = $true
+		foreach ($rule in $fi_acl.Access) {
+			if ( $rule.IdentityReference -eq $principal ) {
+				$rights = $rule.FileSystemRights.ToString()
+				if ( $rights.Contains($permission) ) {
+					$apply_rule = $false
+				}
+			}
+		}
+
+		if ($apply_rule) {
+				try {
+					Set-AclRule $fi_path $principal $permission "grant"
+				}
+				Catch [System.InvalidOperationException], [Microsoft.PowerShell.Commands.SetAclCommand] {
+					LogMsg "SA Failed: $fi_path ($principal::$permission)($_.Exception)"
+					if ( $fi_owner.StartsWith("O:S-1-5-21-")) {
+						Set-OwnerRule $fi_path $townership
+						Set-AclRule $fi_path $principal $permission "grant"
+					}
+				}
+				finally {
+				}
+			} else {
+				# LogMsg "Skip apply - owned by "$fi_acl.Owner"- "$fi_path 
+			}
+		}
+		catch {
+			LogMsg "Error during or after item: $fi_path"
+			LogMsg $_.Exception|format-list -force
+		}
+}
+
 $InitialTimeStamp = Get-Date
 $InitialTimeStamp_txt = Get-Date $InitialTimeStamp -Format "yyyy-MM-dd HH:mm K"
 
-
-$fi_path=""
-
-$dletter = Get-AvailableDriveLetter
 try {
 	LogMsg $InitialTimeStamp_txt
 	LogMsg "---------------------------------------------"
@@ -96,46 +133,11 @@ try {
 	LogMsg "NewOwner:   ""$townership"""
 	LogMsg "ReportFile: ""$report_file_path"""
 	LogMsg "---------------------------------------------"
+	
+	$filesystem_item = get-item -LiteralPath $path
+	apply_permissions $filesystem_item
 	get-childitem -LiteralPath $path -recurse | foreach-object {
-		try {
-			$filesystem_item = $_
-
-			$fi_path = $filesystem_item.fullname
-			$fi_name = $filesystem_item.name
-			$fi_acl = Get-Acl $fi_path
-			$fi_owner = $fi_acl.Owner
-
-			$apply_rule = $true
-			foreach ($rule in $fi_acl.Access) {
-				if ( $rule.IdentityReference -eq $principal ) {
-					$rights = $rule.FileSystemRights.ToString()
-					if ( $rights.Contains($permission) ) {
-						$apply_rule = $false
-					}
-				}
-			}
-
-			if ($apply_rule) {
-					try {
-						Set-AclRule $fi_path $principal $permission "grant"
-					}
-					Catch [System.InvalidOperationException], [Microsoft.PowerShell.Commands.SetAclCommand] {
-						LogMsg "SA Failed: $fi_path ($principal::$permission)($_.Exception)"
-						if ( $fi_owner.StartsWith("O:S-1-5-21-")) {
-							Set-OwnerRule $fi_path $townership
-							Set-AclRule $fi_path $principal $permission "grant"
-						}
-					}
-					finally {
-					}
-				} else {
-					# LogMsg "Skip apply - owned by "$fi_acl.Owner"- "$fi_path 
-				}
-			}
-			catch {
-				LogMsg "Error during or after item: $fi_path"
-				LogMsg $_.Exception|format-list -force
-			}
+		apply_permissions $_
 	}
 }
 catch {
