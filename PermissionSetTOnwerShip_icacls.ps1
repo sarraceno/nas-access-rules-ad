@@ -27,6 +27,8 @@ References:
    https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/new-psdrive?view=powershell-5.1
    https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/remove-psdrive?view=powershell-5.1
    http://vcloud-lab.com/entries/windows-2016-server-r2/find-next-available-free-drive-letter-using-powershell-
+   icacls:
+      https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/icacls
   Long paths:
    https://stackoverflow.com/questions/46308030/handling-path-too-long-exception-with-new-psdrive/46309524
 
